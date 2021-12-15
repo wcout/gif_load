@@ -53,7 +53,7 @@ struct GIF_WHDR {                /** ======== frame writer info: ======== **/
          frxd, fryd, frxo, fryo, /** current frame dimensions and offset  **/
          time, ifrm, nfrm;       /** delay, frame number, frame count     **/
     uint8_t *bptr;               /** frame pixel indices or metadata      **/
-    struct {                     /** [==== GIF RGB palette element: ====] **/
+    struct CPAL {                /** [==== GIF RGB palette element: ====] **/
         uint8_t R, G, B;         /** [color values - red, green, blue   ] **/
     } *cpal;                     /** current palette                      **/
 };
@@ -238,7 +238,7 @@ GIF_EXTR long GIF_Load(void *data, long size,
         if (desc == GIF_FHDM) {
             fhdr = (struct GIF_FHDR*)whdr.bptr;
             if (_GIF_LoadHeader(ghdr->flgs, &whdr.bptr, (void**)&whdr.cpal,
-                                fhdr->flgs, &blen, sizeof(*fhdr)) <= 0)
+                                fhdr->flgs, &blen, sizeof(*fhdr)) < 0)
                 break;
             whdr.frxd = _GIF_SWAP(fhdr->frxd);
             whdr.fryd = _GIF_SWAP(fhdr->fryd);
@@ -256,9 +256,12 @@ GIF_EXTR long GIF_Load(void *data, long size,
         if ((desc = *buff++) == GIF_FHDM) { /** found a frame **/
             whdr.intr = !!((fhdr = (struct GIF_FHDR*)buff)->flgs & 0x40);
             *(void**)&whdr.cpal = (void*)(ghdr + 1); /** interlaced? -^ **/
-            whdr.clrs = _GIF_LoadHeader(ghdr->flgs, &buff, (void**)&whdr.cpal,
-                                        fhdr->flgs, &size, sizeof(*fhdr));
-            if ((skip <= ++whdr.ifrm) && ((whdr.clrs <= 0)
+            if (!(whdr.clrs = _GIF_LoadHeader(ghdr->flgs, &buff, (void**)&whdr.cpal,
+                                        fhdr->flgs, &size, sizeof(*fhdr)))) {
+                whdr.clrs = 2 << ((ghdr->flgs >> 4) & 7); /** cresolution **/
+                whdr.cpal = 0; /** signal: no palette **/
+            }
+            if ((skip <= ++whdr.ifrm) && ((whdr.clrs < 0)
             ||  (_GIF_LoadFrame(&buff, &size,
                                  whdr.bptr, whdr.bptr + blen) < 0)))
                 size = -(whdr.ifrm--) - 1; /** failed to load the frame **/
