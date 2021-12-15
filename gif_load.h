@@ -46,16 +46,16 @@ extern "C" {
 #define _GIF_SWAP(h) ((GIF_BIGE)? ((uint16_t)(h << 8) | (h >> 8)) : h)
 
 #pragma pack(push, 1)
-struct GIF_WHDR {                /** ======== frame writer info: ======== **/
-    long xdim, ydim, clrs,       /** global dimensions, palette size      **/
-         bkgd, tran,             /** background index, transparent index  **/
-         intr, mode,             /** interlace flag, frame blending mode  **/
-         frxd, fryd, frxo, fryo, /** current frame dimensions and offset  **/
-         time, ifrm, nfrm;       /** delay, frame number, frame count     **/
-    uint8_t *bptr;               /** frame pixel indices or metadata      **/
-    struct CPAL {                /** [==== GIF RGB palette element: ====] **/
-        uint8_t R, G, B;         /** [color values - red, green, blue   ] **/
-    } *cpal;                     /** current palette                      **/
+struct GIF_WHDR {               /** ======== frame writer info: ======== **/
+    int xdim, ydim, clrs,       /** global dimensions, palette size      **/
+        bkgd, tran,             /** background index, transparent index  **/
+        intr, mode,             /** interlace flag, frame blending mode  **/
+        frxd, fryd, frxo, fryo, /** current frame dimensions and offset  **/
+        time, ifrm, nfrm;       /** delay, frame number, frame count     **/
+    uint8_t *bptr;              /** frame pixel indices or metadata      **/
+    struct CPAL {               /** [==== GIF RGB palette element: ====] **/
+        uint8_t R, G, B;        /** [color values - red, green, blue   ] **/
+    } *cpal;                    /** current palette                      **/
 };
 #pragma pack(pop)
 
